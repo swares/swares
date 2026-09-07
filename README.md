@@ -10,17 +10,21 @@ waresscott@gmail.com · [LinkedIn](https://www.linkedin.com/in/scottwares/)
 
 ### What I'm building
 
-**[HomeLab](https://github.com/swares/HomeLab)** — a GitOps-managed Kubernetes platform
+Three repositories that form **one system**, not three standalone projects: a Kubernetes platform, an edge sensor and inference framework, and a network monitoring appliance — wired together through a shared device protocol, a containerized adapter, and a single GitOps deployment path.
 
-A three-node high-availability k3s cluster across a 14-host x86/ARM64 fleet. Argo CD reconciles everything from this repo with self-heal enabled, so change lands by pull request and rollback is a `git revert`. Ansible provisions the hosts, OpenTofu manages infrastructure with remote state in MinIO, and Renovate raises dependency PRs. HashiCorp Vault and External Secrets Operator handle the secrets path, cert-manager runs a private CA, Authelia and lldap provide OIDC single sign-on, and Kyverno enforces three cluster policies in Enforce mode. Observability is the full kube-prometheus-stack plus Loki and Alloy. There's also an ARM64 inference tier — a LiteLLM OpenAI-compatible gateway fronting Ollama and NPU-native RKLLama, with Whisper for speech-to-text.
+**[HomeLab](https://github.com/swares/HomeLab)** — the platform
 
-**[HostMon](https://github.com/swares/HostMon)** — a network monitoring appliance in C++
+A three-node high-availability k3s cluster across a 14-host x86/ARM64 fleet. Argo CD reconciles everything from this repo with self-heal enabled, so change lands by pull request and rollback is a `git revert`. Ansible provisions the hosts, OpenTofu manages infrastructure with remote state in MinIO, and Renovate raises dependency PRs. HashiCorp Vault and External Secrets Operator handle the secrets path, cert-manager runs a private CA, Authelia and lldap provide OIDC single sign-on, and Kyverno enforces three cluster policies in Enforce mode. Observability is the full kube-prometheus-stack plus Loki and Alloy. An ARM64 inference tier runs behind a LiteLLM OpenAI-compatible gateway fronting Ollama, NPU-native RKLLama, and Whisper speech-to-text.
 
-Firmware for the Waveshare ESP32-S3, running six check types (ICMP, DNS, TCP, HTTP/S, TLS certificate expiry, traceroute) with an embedded web dashboard, a JSON REST API, and webhook alerting with debounce, re-notify, and acknowledge/pause governance. Hardened with per-device random credentials compared in constant time, CSRF origin validation, and server-side input validation. Ships with a threat model that documents what it *doesn't* protect against, and the hardware reason why.
+**[M5Stack Sensor Framework](https://github.com/swares/My_M5Stack_Core_Framework)** — the edge tier
 
-**[M5Stack Sensor Framework](https://github.com/swares/My_M5Stack_Core_Framework)** — a plugin framework for I2C sensors
+Auto-detects board family and I2C topology at runtime, so one binary runs across four M5Stack hardware families with no recompile. Plugin-per-device architecture, a threshold alarm engine with hysteresis and latching, and output routing to MQTT (with Home Assistant auto-discovery), webhooks, LCD, and SD. An on-device inference router classifies each request and dispatches it to a local NPU-hosted model, a cloud API, or an escalation path — keeping cheap requests local and reserving cloud calls for work that needs them. Its host-side adapter is containerized and deployed into the cluster as an OpenAI-compatible backend behind the LiteLLM gateway, which makes the edge hardware a first-class inference backend rather than a side project.
 
-Auto-detects board family and I2C topology at runtime, so one binary runs across four M5Stack hardware families with no recompile. Plugin-per-device architecture, a threshold alarm engine with hysteresis and latching, and output routing to MQTT (with Home Assistant auto-discovery), webhooks, LCD, and SD. Includes an on-device inference router that classifies each request and dispatches it to a local NPU-hosted model, a cloud API, or an escalation path — keeping cheap requests local and reserving cloud calls for work that needs them.
+**[HostMon](https://github.com/swares/HostMon)** — the monitoring appliance
+
+Firmware for the Waveshare ESP32-S3, running six check types (ICMP, DNS, TCP, HTTP/S, TLS certificate expiry, traceroute) with an embedded web dashboard, a JSON REST API, and webhook alerting with debounce, re-notify, and acknowledge/pause governance. Alerts post over an authenticated webhook straight into the M5Stack device's alert engine — no relay in between. Hardened with per-device random credentials compared in constant time, CSRF origin validation, and server-side input validation, and it ships with a threat model documenting what it *doesn't* protect against and the hardware reasons why.
+
+**Where the seams are.** The repositories split on coupling, not convenience: code bound to the firmware protocol lives with the firmware behind one shared protocol client, so a protocol change is a single commit across firmware and both consumers. Deployment manifests stay in the GitOps repo, and images publish to a private registry and reach the cluster by pinned tag through Argo CD.
 
 ---
 
