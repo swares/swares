@@ -10,11 +10,15 @@ waresscott@gmail.com · [LinkedIn](https://www.linkedin.com/in/scottwares/)
 
 ### What I'm building
 
-Three repositories that form **one system**, not three standalone projects: a Kubernetes platform, an edge sensor and inference framework, and a network monitoring appliance — wired together through a shared device protocol, a containerized adapter, and a single GitOps deployment path.
+Four repositories that form **one system**, not four standalone projects: a Kubernetes platform, its disposable cloud counterpart on AWS, an edge sensor and inference framework, and a network monitoring appliance — wired together through a shared device protocol, a containerized adapter, and a single GitOps deployment path.
 
 **[HomeLab](https://github.com/swares/HomeLab)** — the platform
 
 A three-node high-availability k3s cluster across a 14-host x86/ARM64 fleet. Argo CD reconciles everything from this repo with self-heal enabled, so change lands by pull request and rollback is a `git revert`. Ansible provisions the hosts, OpenTofu manages infrastructure with remote state in MinIO, and Renovate raises dependency PRs. HashiCorp Vault and External Secrets Operator handle the secrets path, cert-manager runs a private CA, Authelia and lldap provide OIDC single sign-on, and Kyverno enforces three cluster policies in Enforce mode. Observability is the full kube-prometheus-stack plus Loki and Alloy. An ARM64 inference tier runs behind a LiteLLM OpenAI-compatible gateway fronting Ollama, NPU-native RKLLama, and Whisper speech-to-text.
+
+**[HomeLab-aws](https://github.com/swares/HomeLab-aws)** — the cloud tier
+
+An Amazon EKS cluster built from nothing with OpenTofu, which bootstraps its own Argo CD, serves the AI gateway through an internet-facing ALB, and is destroyed every night at 02:00 by a least-privilege teardown job. A session costs about $1, against roughly $85 a month left running. Pods reach AWS through IRSA with no static keys, the teardown waits for controller-created load balancers *and* their network interfaces before destroying, and the budget alarm lives in a separate module so it outlives the thing it watches. It runs the same M5Stack adapter as the home lab, pulled from ECR, and it is deliberately detachable: the lab has a zero-line diff from it. [Read the case study →](https://github.com/swares/HomeLab-aws/blob/main/docs/CASE-STUDY.md)
 
 **[M5Stack Sensor Framework](https://github.com/swares/My_M5Stack_Core_Framework)** — the edge tier
 
